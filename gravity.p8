@@ -13,34 +13,34 @@ function _init()
 	camera()
  
 	-- find turrets
- for x=0,map_width-1 do
-  for y=0,map_height-1 do
-   if(mget(x,y)==1) then
-    add(turrets,{x=x*8+4,y=y*8+4,a=.25,spd=.05})
-   end
-  end
- end
+	for x=0,map_width-1 do
+		for y=0,map_height-1 do
+			if(mget(x,y)==1) then
+				add(turrets,{x=x*8+4,y=y*8+4,a=.25,spd=.05})
+			end
+		end
+	end
 end
 
 function rot(x,y,a)
- local c=cos(a)
- local s=sin(a)
- return {x=x*c-y*s,y=y*c+x*s}
+	local c=cos(a)
+	local s=sin(a)
+	return {x=x*c-y*s,y=y*c+x*s}
 end
 
 function ship(a)
- local width=4
- local height=3
- return {
- 	rot(width,0,a),
- 	rot(-width,height,a),
- 	rot(-width/2,0,a),
- 	rot(-width,-height,a),
- }
+	local width=4
+	local height=3
+	return {
+		rot(width,0,a),
+		rot(-width,height,a),
+		rot(-width/2,0,a),
+		rot(-width,-height,a),
+	}
 end
 
 function draw_ship(x,y,a)
- local p=ship(a)
+	local p=ship(a)
 	line(x+p[1].x,y+p[1].y,x+p[2].x,y+p[2].y,7)
 	line(x+p[3].x,y+p[3].y)
 	line(x+p[4].x,y+p[4].y)
@@ -48,35 +48,35 @@ function draw_ship(x,y,a)
 end
 
 function is_solid(x,y)
- return fget(mget(flr(x/8),flr(y/8)),0)
+	return fget(mget(flr(x/8),flr(y/8)),0)
 end
 
 function col(x,y,a)
- local p=ship(a)
- return is_solid(x+p[1].x,y+p[1].y) or
-	 is_solid(x+p[2].x,y+p[2].y) or
-	 is_solid(x+p[4].x,y+p[4].y)
+	local p=ship(a)
+	return is_solid(x+p[1].x,y+p[1].y) or
+		is_solid(x+p[2].x,y+p[2].y) or
+		is_solid(x+p[4].x,y+p[4].y)
 end
 
 function _draw()
- cls(1)
- map()
+	cls(1)
+	map()
 	draw_ship(p.x,p.y,p.a)
 	for shot in all(shots) do
-	 pset(shot.x, shot.y)	 
+		pset(shot.x, shot.y)	 
 	end
 end
 
 function crash()
- _init()
+	_init()
 end
 
 function _update()
- tick=(tick+1)%2^16
- 
- -- turning
- if(btn(⬅️) and p.dy!=0) p.a=(p.a+10/360)%1
- if(btn(➡️) and p.dy!=0) p.a=(p.a-10/360)%1
+	tick=(tick+1)%2^16
+
+	-- turning
+	if(btn(⬅️) and p.dy!=0) p.a=(p.a+10/360)%1
+	if(btn(➡️) and p.dy!=0) p.a=(p.a-10/360)%1
 
 	-- camera
 	local cam_x_max=max(0,p.x-64)
@@ -85,66 +85,66 @@ function _update()
 	local cam_y=min(map_height*8-128,cam_y_max)
 	camera(cam_x,cam_y)
 
- -- gravity
- p.dy+=.03
+	-- gravity
+	p.dy+=.03
 
- -- boost
- if(btn(🅾️)) then
+	-- boost
+	if(btn(🅾️)) then
 		p.dx+=.1*cos(p.a)
 		p.dy+=.1*sin(p.a)
 		sfx(0)
 	end
 
- -- shoot
- if(btnp(❎)) then
-  sfx(1)
-  local s=ship(p.a)[1]
-  local dx=3*cos(p.a)
-  local dy=3*sin(p.a)
-  add(shots, {x=p.x+s.x,y=p.y+s.y,dx=p.dx+dx,dy=p.dy+dy})
- end
+	-- shoot
+	if(btnp(❎)) then
+		sfx(1)
+		local s=ship(p.a)[1]
+		local dx=3*cos(p.a)
+		local dy=3*sin(p.a)
+		add(shots, {x=p.x+s.x,y=p.y+s.y,dx=p.dx+dx,dy=p.dy+dy})
+	end
 
- -- turrets
- if(tick%15==0) then
-	 for turret in all(turrets) do
-	  local dx=2*cos(turret.a)
-	  local dy=2*sin(turret.a)
-	  if(turret.a>=.4 or turret.a<=.1) turret.spd=-turret.spd
-	  turret.a+=turret.spd
-	  add(shots,{x=turret.x,y=turret.y,dx=dx,dy=dy})
-	 end
- end
+	-- turrets
+	if(tick%15==0) then
+		for turret in all(turrets) do
+			local dx=2*cos(turret.a)
+			local dy=2*sin(turret.a)
+			if(turret.a>=.4 or turret.a<=.1) turret.spd=-turret.spd
+			turret.a+=turret.spd
+			add(shots,{x=turret.x,y=turret.y,dx=dx,dy=dy})
+		end
+	end
 
- -- animate shots 
- for shot in all(shots) do
+	-- animate shots 
+	for shot in all(shots) do
 		shot.x+=shot.dx
 		shot.y+=shot.dy
 		local f=fget(mget(shot.x/8,shot.y/8),0)
 		if(f or shot.x<0 or shot.x>=map_width*8 or shot.y<0 or shot.y>=map_height*8) then
-   del(shots,shot)
+			del(shots,shot)
 		end
- end
+	end
 
- -- crash in wall
+	-- crash in wall
 	if(col(p.x+p.dx,p.y,p.a)) then
-  crash()
+		crash()
 	end
 
- -- crash in floor/roof
+	-- crash in floor/roof
 	if(col(p.x,p.y+p.dy,p.a)) then
-  local smooth=p.dy > 0 and p.dy < 2 and p.a>.15 and p.a<.35
-  if (smooth) then
-	  p.dy=0
-	  p.dx=0
-	  p.a=0.25
-	 else
-	  crash()
-	 end
+		local smooth=p.dy > 0 and p.dy < 2 and p.a>.15 and p.a<.35
+		if (smooth) then
+			p.dy=0
+			p.dx=0
+			p.a=0.25
+		else
+			crash()
+		end
 	end
 
- -- apply movement
- p.y+=p.dy
- p.x+=p.dx
+	-- apply movement
+	p.y+=p.dy
+	p.x+=p.dx
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
