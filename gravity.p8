@@ -35,7 +35,7 @@ f={
 	  local x,y=unpack(p)
 			local c=cos(a)
 			local s=sin(a)
-			return {x=x*c-y*s,y=y*c+x*s}
+			return {x*c-y*s,y*c+x*s}
 		end
 	end
 }
@@ -47,23 +47,38 @@ ship={
 	{-4,-3}
 }
 
-function draw_poly(pos, ps)
- local x,y=unpack(pos)
-	line(x+ps[1].x,y+ps[1].y,x+ps[2].x,y+ps[2].y,7)
-	line(x+ps[3].x,y+ps[3].y)
-	line(x+ps[4].x,y+ps[4].y)
-	line(x+ps[1].x,y+ps[1].y)
+function linep(p1,p2,col)
+	local x1,y1=unpack(p1)
+	if(p2) then
+		local x2,y2=unpack(p2)
+ 	return line(x1,y1,x2,y2,col)
+	end
+	line(x1,y1)
 end
 
-function is_solid(x,y)
+function draw_poly(pos, ps)
+ linep(addp(pos,ps[1]),addp(pos,ps[2]),7)
+	linep(addp(pos,ps[3]))
+	linep(addp(pos,ps[4]))
+	linep(addp(pos,ps[1]))
+end
+
+function is_solid(p)
+ local x,y=unpack(p)
 	return fget(mget(flr(x/8),flr(y/8)),0)
 end
 
-function col(x,y,a)
-	local p=f.map(f.rot(a), ship)
-	return is_solid(x+p[1].x,y+p[1].y) or
-		is_solid(x+p[2].x,y+p[2].y) or
-		is_solid(x+p[4].x,y+p[4].y)
+function addp(p1,p2)
+	local x1,y1=unpack(p1)
+	local x2,y2=unpack(p2)
+	return {x1+x2,y1+y2}
+end
+
+function col(p,a)
+	local ps=f.map(f.rot(a), ship)
+	return is_solid(addp(ps[1],p)) or
+		is_solid(addp(ps[2],p)) or
+		is_solid(addp(ps[4],p))
 end
 
 function _draw()
@@ -118,10 +133,10 @@ function _update()
 	-- shoot
 	if(btnp(❎)) then
 		sfx(1)
-		local s=f.rot(a)(ship[1])
+		local sx,sy=unpack(f.rot(a)(ship[1]))
 		local dx=3*cos(a)
 		local dy=3*sin(a)
-		add(shots,{p={x+s.x,y+s.y},dx=vx+dx,dy=vy+dy})
+		add(shots,{p={x+sx,y+sy},v={vx+dx,vy+dy}})
 	end
 
 	-- turrets
@@ -132,7 +147,7 @@ function _update()
 			if(turret.a>=.4 or turret.a<=.1) turret.spd=-turret.spd
 			turret.a+=turret.spd
 			local x,y=unpack(turret.p)
-			add(shots,{p={x,y},dx=dx,dy=dy})
+			add(shots,{p={x,y},v={dx,dy}})
 		end
 	end
 
@@ -150,13 +165,13 @@ function _update()
 	end
 
 	-- crash in wall
-	if(col(x+vx,y,a)) then
+	if(col({x+vx,y},a)) then
 		crash()
 		return
 	end
 
 	-- crash in floor/roof
-	if(col(x,y+vy,a)) then
+	if(col({x,y+vy},a)) then
 		local smooth=vy>0 and vy<2 and a>.15 and a<.35
 		if (smooth) then
 			vy=0
