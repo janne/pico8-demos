@@ -11,6 +11,7 @@ function _init()
 	p1={p={64,64},v={0,0},a=.25}
 	tick=0
 	camera()
+	reload(0x2000, 0x2000, 0x1000)
  
 	-- find turrets
 	for x=0,map_width-1 do
@@ -91,7 +92,7 @@ function _draw()
 	end
 	camera()
 	local cpu=flr(stat(1)*100)
-	print(cpu.."%")
+	print("cpu:"..cpu.."%")
 end
 
 function crash()
@@ -105,6 +106,57 @@ function set_camera(p)
 	local cam_y_max=max(0,y-64)
 	local cam_y=min(map_height*8-128,cam_y_max)
 	camera(cam_x,cam_y)
+end
+
+function sign(p1,p2,p3)
+ local p1x,p1y=unpack(p1)
+ local p2x,p2y=unpack(p2)
+ local p3x,p3y=unpack(p3)
+	return (p1x-p3x)*(p2y-p3y)-(p2x-p3x)*(p1y-p3y)
+end
+
+function is_hit(shot,v1,v2,v3)
+ local d1=sign(shot,v1,v2)
+ local d2=sign(shot,v2,v3)
+ local d3=sign(shot,v3,v1)
+ local has_neg=(d1<0)or(d2<0)or(d3<0)
+ local has_pos=(d1>0)or(d2>0)or(d3>0)
+ return not (has_neg and has_pos)
+end
+
+function check_shot(shot)
+	local x,y=unpack(shot.p)
+
+ -- out of bounds
+	if(x<0 or x>=map_width*8 or y<0 or y>=map_height*8) then
+		return del(shots,shot)
+	end
+
+	local mx=flr(x/8)
+	local my=flr(y/8)
+	local m=mget(mx,my)
+
+ -- hit tower
+	if(m==1) then
+		mset(mx,my,0)
+		return del(shots,shot)
+	end
+
+ -- hit solid	ground
+	if(fget(m,0)) then
+		return del(shots,shot)
+	end
+
+ -- hit ship
+	local ps=f.map(f.rot(p1.a), ship)
+ local v1=addp(p1.p,ps[1])
+	local v2=addp(p1.p,ps[2])
+	local v3=addp(p1.p,ps[4])
+
+	if(is_hit(shot.p,v1,v2,v3)) then
+	 crash()
+		return del(shots,shot)
+	end
 end
 
 function _update()
@@ -154,19 +206,7 @@ function _update()
 	-- animate shots 
 	for shot in all(shots) do
 		shot.p=addp(shot.p,shot.v)
-		local x,y=unpack(shot.p)
-		mx=flr(x/8)
-		my=flr(y/8)
-		local m=mget(mx,my)
-		if(m==1) then
-			mset(mx,my,0)
-			del(shots,shot)
-		else
-			local f=fget(m,0)
-			if(f or x<0 or x>=map_width*8 or y<0 or y>=map_height*8) then
-				del(shots,shot)
-			end
-		end
+		check_shot(shot)
 	end
 
 	-- crash in wall
