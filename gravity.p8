@@ -16,7 +16,7 @@ function _init()
 	for x=0,map_width-1 do
 		for y=0,map_height-1 do
 			if(mget(x,y)==1) then
-				add(turrets,{x=x*8+4,y=y*8+4,a=.25,spd=.05})
+				add(turrets,{p={x*8+4,y*8+4},a=.25,spd=.05})
 			end
 		end
 	end
@@ -71,7 +71,8 @@ function _draw()
 	map()
 	draw_poly(p1.p,f.map(f.rot(p1.a), ship))
 	for shot in all(shots) do
-		pset(shot.x, shot.y)	 
+	 local x,y=unpack(shot.p)
+		pset(x, y)	 
 	end
 	camera()
 	local cpu=flr(stat(1)*100)
@@ -120,7 +121,7 @@ function _update()
 		local s=f.rot(a)(ship[1])
 		local dx=3*cos(a)
 		local dy=3*sin(a)
-		add(shots, {x=x+s.x,y=y+s.y,dx=vx+dx,dy=vy+dy})
+		add(shots,{p={x+s.x,y+s.y},dx=vx+dx,dy=vy+dy})
 	end
 
 	-- turrets
@@ -130,18 +131,22 @@ function _update()
 			local dy=2*sin(turret.a)
 			if(turret.a>=.4 or turret.a<=.1) turret.spd=-turret.spd
 			turret.a+=turret.spd
-			add(shots,{x=turret.x,y=turret.y,dx=dx,dy=dy})
+			local x,y=unpack(turret.p)
+			add(shots,{p={x,y},dx=dx,dy=dy})
 		end
 	end
 
 	-- animate shots 
 	for shot in all(shots) do
-		shot.x+=shot.dx
-		shot.y+=shot.dy
-		local f=fget(mget(shot.x/8,shot.y/8),0)
-		if(f or shot.x<0 or shot.x>=map_width*8 or shot.y<0 or shot.y>=map_height*8) then
+		local x,y=unpack(shot.p)
+		local dx,dy=unpack(shot.v)
+		x+=dx
+		y+=dy
+		local f=fget(mget(x/8,y/8),0)
+		if(f or x<0 or x>=map_width*8 or y<0 or y>=map_height*8) then
 			del(shots,shot)
 		end
+		shot.p={x,y}
 	end
 
 	-- crash in wall
