@@ -22,25 +22,32 @@ function _init()
 	end
 end
 
-function rot(x,y,a)
-	local c=cos(a)
-	local s=sin(a)
-	return {x=x*c-y*s,y=y*c+x*s}
-end
+f={
+	map=function(f,t)
+		local new={}
+		for x in all(t) do
+			add(new,f(x))
+		end
+		return new
+	end,
+	rot=function(a)
+	 return function(p)
+			local c=cos(a)
+			local s=sin(a)
+			return {x=p.x*c-p.y*s,y=p.y*c+p.x*s}
+		end
+	end
+}
 
-function ship(a)
-	local width=4
-	local height=3
-	return {
-		rot(width,0,a),
-		rot(-width,height,a),
-		rot(-width/2,0,a),
-		rot(-width,-height,a),
-	}
-end
+ship={
+	{x=4,y=0},
+	{x=-4,y=3},
+	{x=-2,y=0},
+	{x=-4,y=-3}
+}
 
 function draw_ship(x,y,a)
-	local p=ship(a)
+	local p=f.map(f.rot(a), ship)
 	line(x+p[1].x,y+p[1].y,x+p[2].x,y+p[2].y,7)
 	line(x+p[3].x,y+p[3].y)
 	line(x+p[4].x,y+p[4].y)
@@ -52,7 +59,7 @@ function is_solid(x,y)
 end
 
 function col(x,y,a)
-	local p=ship(a)
+	local p=f.map(f.rot(a), ship)
 	return is_solid(x+p[1].x,y+p[1].y) or
 		is_solid(x+p[2].x,y+p[2].y) or
 		is_solid(x+p[4].x,y+p[4].y)
@@ -98,7 +105,7 @@ function _update()
 	-- shoot
 	if(btnp(❎)) then
 		sfx(1)
-		local s=ship(p.a)[1]
+		local s=f.rot(p.a)(ship[1])
 		local dx=3*cos(p.a)
 		local dy=3*sin(p.a)
 		add(shots, {x=p.x+s.x,y=p.y+s.y,dx=p.dx+dx,dy=p.dy+dy})
