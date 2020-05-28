@@ -8,7 +8,7 @@ function _init()
 	map_height=32
 	shots={}
 	turrets={}
-	p={x=64,y=64,dx=0,dy=0,a=.25}
+	p1={p={64,64},dx=0,dy=0,a=.25}
 	tick=0
 	camera()
  
@@ -32,22 +32,22 @@ f={
 	end,
 	rot=function(a)
 	 return function(p)
+	  local x,y=unpack(p)
 			local c=cos(a)
 			local s=sin(a)
-			return {x=p.x*c-p.y*s,y=p.y*c+p.x*s}
+			return {x=x*c-y*s,y=y*c+x*s}
 		end
 	end
 }
 
 ship={
-	{x=4,y=0},
-	{x=-4,y=3},
-	{x=-2,y=0},
-	{x=-4,y=-3}
+	{4,0},
+	{-4,3},
+	{-2,0},
+	{-4,-3}
 }
 
-function draw_ship(x,y,a)
-	local p=f.map(f.rot(a), ship)
+function draw_poly(p)
 	line(x+p[1].x,y+p[1].y,x+p[2].x,y+p[2].y,7)
 	line(x+p[3].x,y+p[3].y)
 	line(x+p[4].x,y+p[4].y)
@@ -68,10 +68,13 @@ end
 function _draw()
 	cls(1)
 	map()
-	draw_ship(p.x,p.y,p.a)
+	draw_poly(f.map(f.rot(p1.a), ship))
 	for shot in all(shots) do
 		pset(shot.x, shot.y)	 
 	end
+	camera()
+	local cpu=flr(stat(1)*100)
+	print(cpu.."%")
 end
 
 function crash()
@@ -80,35 +83,36 @@ end
 
 function _update()
 	tick=(tick+1)%2^16
+	x,y=unpack(p1.p)
 
 	-- turning
-	if(btn(⬅️) and p.dy!=0) p.a=(p.a+10/360)%1
-	if(btn(➡️) and p.dy!=0) p.a=(p.a-10/360)%1
+	if(btn(⬅️) and p1.dy!=0) p1.a=(p1.a+10/360)%1
+	if(btn(➡️) and p1.dy!=0) p1.a=(p1.a-10/360)%1
 
 	-- camera
-	local cam_x_max=max(0,p.x-64)
+	local cam_x_max=max(0,x-64)
 	local cam_x=min(map_width*8-128,cam_x_max)
-	local cam_y_max=max(0,p.y-64)
+	local cam_y_max=max(0,y-64)
 	local cam_y=min(map_height*8-128,cam_y_max)
 	camera(cam_x,cam_y)
 
 	-- gravity
-	p.dy+=.03
+	p1.dy+=.03
 
 	-- boost
 	if(btn(🅾️)) then
-		p.dx+=.1*cos(p.a)
-		p.dy+=.1*sin(p.a)
+		p1.dx+=.1*cos(p1.a)
+		p1.dy+=.1*sin(p1.a)
 		sfx(0)
 	end
 
 	-- shoot
 	if(btnp(❎)) then
 		sfx(1)
-		local s=f.rot(p.a)(ship[1])
-		local dx=3*cos(p.a)
-		local dy=3*sin(p.a)
-		add(shots, {x=p.x+s.x,y=p.y+s.y,dx=p.dx+dx,dy=p.dy+dy})
+		local s=f.rot(p1.a)(ship[1])
+		local dx=3*cos(p1.a)
+		local dy=3*sin(p1.a)
+		add(shots, {x=x+s.x,y=y+s.y,dx=p1.dx+dx,dy=p1.dy+dy})
 	end
 
 	-- turrets
@@ -133,25 +137,25 @@ function _update()
 	end
 
 	-- crash in wall
-	if(col(p.x+p.dx,p.y,p.a)) then
+	if(col(x+p1.dx,y,p1.a)) then
 		crash()
+		return
 	end
 
 	-- crash in floor/roof
-	if(col(p.x,p.y+p.dy,p.a)) then
-		local smooth=p.dy > 0 and p.dy < 2 and p.a>.15 and p.a<.35
+	if(col(x,y+p1.dy,p1.a)) then
+		local smooth=p1.dy > 0 and p1.dy < 2 and p1.a>.15 and p1.a<.35
 		if (smooth) then
-			p.dy=0
-			p.dx=0
-			p.a=0.25
+			p1.dy=0
+			p1.dx=0
+			p1.a=0.25
 		else
 			crash()
+			return
 		end
 	end
-
-	-- apply movement
-	p.y+=p.dy
-	p.x+=p.dx
+	
+	p1.p={x+p1.dx,y+p1.dy}
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
