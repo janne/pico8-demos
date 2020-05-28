@@ -120,6 +120,14 @@ function _update()
 	-- camera
 	set_camera(p1.p)
 
+	-- shoot
+	if(btnp(❎)) then
+		sfx(1)
+		local sp=f.rot(a)(ship[1])
+		local sv={3*cos(a),3*sin(a)}
+		add(shots,{p=addp(p1.p,sp),v=addp(p1.v,sv)})
+	end
+
 	-- gravity
 	vy+=.03
 
@@ -130,38 +138,24 @@ function _update()
 		sfx(0)
 	end
 
-	-- shoot
-	if(btnp(❎)) then
-		sfx(1)
-		local sx,sy=unpack(f.rot(a)(ship[1]))
-		local dx=3*cos(a)
-		local dy=3*sin(a)
-		add(shots,{p={x+sx,y+sy},v={vx+dx,vy+dy}})
-	end
-
 	-- turrets
 	if(tick%15==0) then
 		for turret in all(turrets) do
-			local dx=2*cos(turret.a)
-			local dy=2*sin(turret.a)
 			if(turret.a>=.4 or turret.a<=.1) turret.spd=-turret.spd
 			turret.a+=turret.spd
-			local x,y=unpack(turret.p)
-			add(shots,{p={x,y},v={dx,dy}})
+			local v={2*cos(turret.a),2*sin(turret.a)}
+			add(shots,{p=turret.p,v=v})
 		end
 	end
 
 	-- animate shots 
 	for shot in all(shots) do
+		shot.p=addp(shot.p,shot.v)
 		local x,y=unpack(shot.p)
-		local dx,dy=unpack(shot.v)
-		x+=dx
-		y+=dy
 		local f=fget(mget(x/8,y/8),0)
 		if(f or x<0 or x>=map_width*8 or y<0 or y>=map_height*8) then
 			del(shots,shot)
 		end
-		shot.p={x,y}
 	end
 
 	-- crash in wall
@@ -184,7 +178,7 @@ function _update()
 	end
 	
 	p1.v={vx,vy}
-	p1.p={x+vx,y+vy}
+	p1.p=addp(p1.p,p1.v)
 	p1.a=a
 end
 __gfx__
