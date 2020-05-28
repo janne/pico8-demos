@@ -16,7 +16,7 @@ function _init()
 	for x=0,map_width-1 do
 		for y=0,map_height-1 do
 			if(mget(x,y)==1) then
-				add(turrets,{p={x*8+4,y*8+4},a=.25,spd=.05})
+				add(turrets,{p={x,y},a=.25,spd=.05})
 			end
 		end
 	end
@@ -57,10 +57,10 @@ function linep(p1,p2,col)
 end
 
 function draw_poly(pos, ps)
- linep(addp(pos,ps[1]),addp(pos,ps[2]),7)
-	linep(addp(pos,ps[3]))
-	linep(addp(pos,ps[4]))
-	linep(addp(pos,ps[1]))
+	for i,p in pairs(ps) do
+   local to=(i==#ps)and(1)or(i+1)
+   linep(addp(pos,p),addp(pos,ps[to]),7)
+ end
 end
 
 function is_solid(p)
@@ -144,7 +144,10 @@ function _update()
 			if(turret.a>=.4 or turret.a<=.1) turret.spd=-turret.spd
 			turret.a+=turret.spd
 			local v={2*cos(turret.a),2*sin(turret.a)}
-			add(shots,{p=turret.p,v=v})
+			local x,y=unpack(turret.p)
+			if(mget(x,y)!=0) then
+				add(shots,{p={x*8+4,y*8},v=v})
+		 end
 		end
 	end
 
@@ -152,9 +155,17 @@ function _update()
 	for shot in all(shots) do
 		shot.p=addp(shot.p,shot.v)
 		local x,y=unpack(shot.p)
-		local f=fget(mget(x/8,y/8),0)
-		if(f or x<0 or x>=map_width*8 or y<0 or y>=map_height*8) then
+		mx=flr(x/8)
+		my=flr(y/8)
+		local m=mget(mx,my)
+		if(m==1) then
+			mset(mx,my,0)
 			del(shots,shot)
+		else
+			local f=fget(m,0)
+			if(f or x<0 or x>=map_width*8 or y<0 or y>=map_height*8) then
+				del(shots,shot)
+			end
 		end
 	end
 
