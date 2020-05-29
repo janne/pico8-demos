@@ -159,6 +159,18 @@ function check_shot(shot)
 	end
 end
 
+function animate_turret(turret)
+	if(turret.a>=.4 or turret.a<=.1) then
+		turret.spd=-turret.spd
+	end
+	turret.a+=turret.spd
+	local v={2*cos(turret.a),2*sin(turret.a)}
+	local x,y=unpack(turret.p)
+	if(mget(x,y)!=0) then
+		add(shots,{p={x*8+4,y*8},v=v})
+ end
+end
+
 function _update()
 	tick=(tick+1)%2^16
 	local x,y=unpack(p1.p)
@@ -193,13 +205,7 @@ function _update()
 	-- turrets
 	if(tick%15==0) then
 		for turret in all(turrets) do
-			if(turret.a>=.4 or turret.a<=.1) turret.spd=-turret.spd
-			turret.a+=turret.spd
-			local v={2*cos(turret.a),2*sin(turret.a)}
-			local x,y=unpack(turret.p)
-			if(mget(x,y)!=0) then
-				add(shots,{p={x*8+4,y*8},v=v})
-		 end
+		 animate_turret(turret)
 		end
 	end
 
