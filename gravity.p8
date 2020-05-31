@@ -40,6 +40,7 @@ function reset()
 	p1.p=start_pos
 	p1.v={0,0}
 	p1.a=.25
+	p1.dead=false
 	p1.carried=0
 	p1.fuel=99
 end
@@ -177,6 +178,7 @@ end
 
 function crash()
  if(anim) return
+ p1.dead=true
  p1.lives-=1
  local fn=reset
  if(p1.lives==0) then
@@ -307,8 +309,8 @@ function _update()
 	local a=p1.a
 
 	-- turning
-	if(btn(⬅️) and vy!=0) a=(a+10/360)%1
-	if(btn(➡️) and vy!=0) a=(a-10/360)%1
+	if(btn(⬅️) and not p1.dead and vy!=0) a=(a+10/360)%1
+	if(btn(➡️) and not p1.dead and vy!=0) a=(a-10/360)%1
 
 	-- camera
 	set_camera(p1.p)
@@ -321,7 +323,7 @@ function _update()
  end
 
 	-- shoot
-	if(btnp(❎)) then
+	if(btnp(❎) and not p1.dead) then
 		sfx(1)
 		local sp=f.rot(a)(ship[1])
 		local sv={3*cos(a),3*sin(a)}
@@ -332,7 +334,7 @@ function _update()
 	vy+=.01
 
 	-- boost
-	if(btn(🅾️) or btn(⬆️)) then
+	if((btn(🅾️) or btn(⬆️)) and not p1.dead) then
 	 if(p1.fuel>0) then
 			vx+=0.1*cos(a)
 			vy+=0.1*sin(a)
