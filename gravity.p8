@@ -25,12 +25,12 @@ function draw_start_screen()
 	 end
 	end
 	for star in all(stars.light) do
-	 local x,y=unpack(star)
+		local x,y=unpack(star)
 	 pset((x-shift_light)%128,y,6)
 	end
 	for star in all(stars.dark) do
 	 local x,y=unpack(star)
-	 pset((x-shift_dark)%128,y,7)
+	 pset((x-shift_dark)%128,y,5)
 	end
  for i=0,12 do
   pal(7,(i+1)%8)
@@ -38,6 +38,7 @@ function draw_start_screen()
   local x=2*cos(a+i/7)+8
   local y=6*sin(a+i/7)
  	spr(240+i,9*i+x,20+y)
+ 	pal()
  end
 	map(0,32)
 	rectfill(0,57,128,128,13)
