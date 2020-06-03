@@ -3,6 +3,8 @@ version 27
 __lua__
 -- gRAVITY fORCE
 
+start_level=0
+
 ship={
 	{4,0},
 	{-4,3},
@@ -46,14 +48,13 @@ end
  
 function start()
  running=true
+	the_end=false
 	map_width=24
 	map_height=32
 	start_pos={64,64}
 	shots={}
 	pals={}
-	start_level=0
 	level=start_level
-	the_end=false
 	reload(0x2000, 0x2000, 0x1000) 
 	p1={v={0,0},a=.25,carried=0,lives=5,fuel=99,score=0}
 	calculate_map()
