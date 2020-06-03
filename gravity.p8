@@ -44,6 +44,9 @@ function draw_start_screen()
 	print("press ❎ or 🅾️ to play",20,70,1)
 	print("bring all boxes to home base",8,80,2)
 	print("made by github.com/janne",16,100,1)
+	if(p1) then
+		print("last score: "..p1.score,35,114,5)
+	end
 end
  
 function start()
@@ -315,11 +318,11 @@ function animate_shot(shot)
 	  local tx,ty=unpack(turret.p)
 	  if(mx==tx and my==ty) then
 	   turret.dmg+=1
-				p1.score+=1
+				p1.score+=1*p1.lives
 	   if(turret.dmg>=3) then
 	    sfx(5)
 					mset(mx,my,0)
-					p1.score+=2
+					p1.score+=2*p1.lives
 				else
 				 sfx(6)
 				end
@@ -333,11 +336,11 @@ function animate_shot(shot)
  	local mob_x,mob_y=unpack(mob.p)
 	 if(x>mob_x and x<mob_x+16 and y>mob_y and y<mob_y+16) then
    mob.dmg+=1
-			p1.score+=2
+			p1.score+=2*p1.lives
    if(mob.dmg>=10) then
     sfx(5)
 				del(mobs,mob)
-				p1.score+=5
+				p1.score+=5*p1.lives
 			else
 			 sfx(6)
 			end	 
@@ -393,7 +396,7 @@ function check_landing()
 	
 	if(m>=2 and m<=4) then
 	 if(p1.carried>0) then
-	  p1.score+=p1.carried*10
+	  p1.score+=p1.carried*p1.lives*10
 	 	p1.carried=0
 	 	local x,y=unpack(p1.p)
 	 	local mx=flr(x/8)
